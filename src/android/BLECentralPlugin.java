@@ -57,6 +57,7 @@ public class BLECentralPlugin extends CordovaPlugin {
     private static final String START_SCAN = "startScan";
     private static final String STOP_SCAN = "stopScan";
     private static final String START_SCAN_WITH_OPTIONS = "startScanWithOptions";
+	private static final String START_MAC_SCAN_WITH_OPTIONS = "startMACScanWithOptions";
     private static final String BONDED_DEVICES = "bondedDevices";
     private static final String LIST = "list";
 
@@ -332,6 +333,15 @@ public class BLECentralPlugin extends CordovaPlugin {
             resetScanOptions();
             this.reportDuplicates = options.optBoolean("reportDuplicates", false);
             findLowEnergyDevices(callbackContext, serviceUUIDs, -1);
+
+        } else if (action.equals(START_MAC_SCAN_WITH_OPTIONS)) {
+            UUID[] macs = parseServiceUUIDList(args.getJSONArray(0));
+            JSONObject options = args.getJSONObject(1);
+
+            resetScanOptions();
+            this.reportDuplicates = options.optBoolean("reportDuplicates", false);
+            //findLowEnergyDevices(callbackContext, serviceUUIDs, -1);
+			findLowEnergyDevices2(callbackContext, macs, -1);
 
         } else if (action.equals(BONDED_DEVICES)) {
 
@@ -767,6 +777,97 @@ public class BLECentralPlugin extends CordovaPlugin {
                         new ParcelUuid(uuid)).build();
                 filters.add(filter);
             }
+            ScanSettings settings = new ScanSettings.Builder().build();
+            bluetoothLeScanner.startScan(filters, settings, leScanCallback);
+        } else {
+            bluetoothLeScanner.startScan(leScanCallback);
+        }
+
+        if (scanSeconds > 0) {
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    LOG.d(TAG, "Stopping Scan");
+                    bluetoothLeScanner.stopScan(leScanCallback);
+                }
+            }, scanSeconds * 1000);
+        }
+
+        PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
+        result.setKeepCallback(true);
+        callbackContext.sendPluginResult(result);
+    }
+	
+	private void findLowEnergyDevices2(CallbackContext callbackContext, UUID[] macs, int scanSeconds) {
+
+
+
+        if (!locationServicesEnabled()) {
+            LOG.w(TAG, "Location Services are disabled");
+        }
+
+        if (Build.VERSION.SDK_INT >= 29) {                                  // (API 29) Build.VERSION_CODES.Q
+            if (!PermissionHelper.hasPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                permissionCallback = callbackContext;
+                this.macs = macs;
+                this.scanSeconds = scanSeconds;
+
+                String[] permissions = {
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        "android.permission.ACCESS_BACKGROUND_LOCATION"     // (API 29) Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                };
+
+                PermissionHelper.requestPermissions(this, REQUEST_ACCESS_LOCATION, permissions);
+                return;
+            }
+        } else {
+            if(!PermissionHelper.hasPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                // save info so we can call this method again after permissions are granted
+                permissionCallback = callbackContext;
+                this.macs = macs;
+                this.scanSeconds = scanSeconds;
+                PermissionHelper.requestPermission(this, REQUEST_ACCESS_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
+                return;
+            }
+        }
+
+
+        // return error if already scanning
+        if (bluetoothAdapter.isDiscovering()) {
+            LOG.w(TAG, "Tried to start scan while already running.");
+            callbackContext.error("Tried to start scan while already running.");
+            return;
+        }
+
+        // clear non-connected cached peripherals
+        for(Iterator<Map.Entry<String, Peripheral>> iterator = peripherals.entrySet().iterator(); iterator.hasNext(); ) {
+            Map.Entry<String, Peripheral> entry = iterator.next();
+            Peripheral device = entry.getValue();
+            boolean connecting = device.isConnecting();
+            if (connecting){
+                LOG.d(TAG, "Not removing connecting device: " + device.getDevice().getAddress());
+            }
+            if(!entry.getValue().isConnected() && !connecting) {
+                iterator.remove();
+            }
+        }
+
+        discoverCallback = callbackContext;
+        bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+        if (macs != null && macs.length > 0) {
+            List<ScanFilter> filters = new ArrayList<ScanFilter>();
+            /*for (UUID uuid : serviceUUIDs) {
+                ScanFilter filter = new ScanFilter.Builder().setServiceUuid(
+                        new ParcelUuid(uuid)).build();
+                filters.add(filter);
+            }*/
+			for (String address : macs) {
+				ScanFilter filter = new ScanFilter.Builder()
+						.setDeviceAddress(address)
+						.build();
+				filters.add(filter);
+			}
             ScanSettings settings = new ScanSettings.Builder().build();
             bluetoothLeScanner.startScan(filters, settings, leScanCallback);
         } else {

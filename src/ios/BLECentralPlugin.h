@@ -43,6 +43,7 @@
 - (void)scan:(CDVInvokedUrlCommand *)command;
 - (void)startScan:(CDVInvokedUrlCommand *)command;
 - (void)startScanWithOptions:(CDVInvokedUrlCommand *)command;
+- (void)startMACScanWithOptions:(CDVInvokedUrlCommand *)command;
 - (void)stopScan:(CDVInvokedUrlCommand *)command;
 - (void)connectedPeripheralsWithServices:(CDVInvokedUrlCommand*)command;
 - (void)peripheralsWithIdentifiers:(CDVInvokedUrlCommand*)command;

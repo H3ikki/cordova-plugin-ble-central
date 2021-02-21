@@ -19,6 +19,7 @@ class BLECommand {
 
     private CallbackContext callbackContext;
     private UUID serviceUUID;
+	private UUID macs;
     private UUID characteristicUUID;
     private byte[] data;
     private int type;

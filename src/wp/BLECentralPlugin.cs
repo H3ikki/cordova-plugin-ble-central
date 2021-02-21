@@ -54,6 +54,10 @@ public class BLECentralPlugin : BaseCommand
     {
       notImplemented();
     }
+	public void startMACScanWithOptions(string args)
+    {
+      notImplemented();
+    }
     public void connect(string args)
     {
       notImplemented();

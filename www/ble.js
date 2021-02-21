@@ -79,6 +79,15 @@ module.exports = {
         options = options || {};
         cordova.exec(successWrapper, failure, 'BLE', 'startScanWithOptions', [services, options]);
     },
+	
+	startMACScanWithOptions: function(macs, options, success, failure) {
+        var successWrapper = function(peripheral) {
+            convertToNativeJS(peripheral);
+            success(peripheral);
+        };
+        options = options || {};
+        cordova.exec(successWrapper, failure, 'BLE', 'startMACScanWithOptions', [macs, options]);
+    },
 
     // iOS only
     connectedPeripheralsWithServices: function(services, success, failure) {

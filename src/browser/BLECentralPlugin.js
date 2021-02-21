@@ -19,6 +19,10 @@ module.exports = {
         notSupported();
         if (failure) failure();
     },
+	startMACScanWithOptions: function(macs, options, success, failure) {
+        notSupported();
+        if (failure) failure();
+    },
     connect: function(device_id, connectSuccess, connectFailure) {
         notSupported();
         if (connectFailure) connectFailure();

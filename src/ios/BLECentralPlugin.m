@@ -315,6 +315,22 @@
     [manager scanForPeripheralsWithServices:serviceUUIDs options:scanOptions];
 }
 
+- (void)startMACScanWithOptions:(CDVInvokedUrlCommand*)command {
+    NSLog(@"startMACScanWithOptions");
+    discoverPeripheralCallbackId = [command.callbackId copy];
+    NSArray<NSString *> *macsStrings = [command argumentAtIndex:0];
+    NSArray<CBUUID *> *macs = [self uuidStringsToCBUUIDs:macsStrings];
+    NSDictionary *options = command.arguments[1];
+
+    NSMutableDictionary *scanOptions = [NSMutableDictionary new];
+    NSNumber *reportDuplicates = [options valueForKey: @"reportDuplicates"];
+    if (reportDuplicates) {
+        [scanOptions setValue:reportDuplicates
+                       forKey:CBCentralManagerScanOptionAllowDuplicatesKey];
+    }
+
+    [manager scanForPeripheralsWithServices:macs options:scanOptions];
+}
 - (void)stopScan:(CDVInvokedUrlCommand*)command {
     NSLog(@"stopScan");
 
