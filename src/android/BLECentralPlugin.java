@@ -879,7 +879,13 @@ public class BLECentralPlugin extends CordovaPlugin {
 						.build();
 				filters.add(filter);
 			}
-            ScanSettings settings = new ScanSettings.Builder().build();
+            ScanSettings settings = new ScanSettings.Builder()
+						.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+						.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+						.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+						.setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
+						.setReportDelay(0L)
+						.build();
             bluetoothLeScanner.startScan(filters, settings, leScanCallback);
         } else {
             bluetoothLeScanner.startScan(leScanCallback);
