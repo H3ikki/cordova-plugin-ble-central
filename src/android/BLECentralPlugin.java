@@ -113,6 +113,7 @@ public class BLECentralPlugin extends CordovaPlugin {
     private static final int REQUEST_ACCESS_LOCATION = 2;
     private CallbackContext permissionCallback;
     private UUID[] serviceUUIDs;
+	private String[] macs;
     private int scanSeconds;
 
     // Bluetooth state notification
@@ -335,7 +336,7 @@ public class BLECentralPlugin extends CordovaPlugin {
             findLowEnergyDevices(callbackContext, serviceUUIDs, -1);
 
         } else if (action.equals(START_MAC_SCAN_WITH_OPTIONS)) {
-            UUID[] macs = parseServiceUUIDList(args.getJSONArray(0));
+            String[] macs = parseMACList(args.getJSONArray(0));
             JSONObject options = args.getJSONObject(1);
 
             resetScanOptions();
@@ -385,6 +386,16 @@ public class BLECentralPlugin extends CordovaPlugin {
         return serviceUUIDs.toArray(new UUID[jsonArray.length()]);
     }
 
+	private String[] parseMACList(JSONArray jsonArray) throws JSONException {
+        List<String> macs = new ArrayList<String>();
+
+        for(int i = 0; i < jsonArray.length(); i++){
+            String macString = jsonArray.getString(i);
+            macs.add(macString);
+        }
+
+        return macs.toArray(new String[jsonArray.length()]);
+    }
     private void onBluetoothStateChange(Intent intent) {
         final String action = intent.getAction();
 
@@ -799,7 +810,7 @@ public class BLECentralPlugin extends CordovaPlugin {
         callbackContext.sendPluginResult(result);
     }
 	
-	private void findLowEnergyDevices2(CallbackContext callbackContext, UUID[] macs, int scanSeconds) {
+	private void findLowEnergyDevices2(CallbackContext callbackContext, String[] macs, int scanSeconds) {
 
 
 
